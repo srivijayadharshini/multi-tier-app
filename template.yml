@@ -7,7 +7,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
-      ImageId: ami-0bf1982bfc7bbc490
+      ImageId: ami-01b40e1bcccae197a
       SecurityGroupIds:
         - !Ref WebSecurityGroup
 
@@ -15,7 +15,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
-      ImageId: ami-0bf1982bfc7bbc490
+      ImageId: ami-01b40e1bcccae197a
       SecurityGroupIds:
         - !Ref AppSecurityGroup
 
