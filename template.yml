@@ -1,14 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Multi Tier Application (Frontend + Backend CI/CD Ready)
+Description: Student Result Management System
 
 Resources:
 
-  # ---------------- IAM ROLE FOR EC2 ----------------
   EC2Role:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
@@ -25,7 +24,6 @@ Resources:
       Roles:
         - !Ref EC2Role
 
-  # ---------------- WEB SERVER ----------------
   WebServer:
     Type: AWS::EC2::Instance
     Properties:
@@ -42,7 +40,6 @@ Resources:
           systemctl enable httpd
           systemctl start httpd
 
-  # ---------------- APP SERVER ----------------
   AppServer:
     Type: AWS::EC2::Instance
     Properties:
@@ -54,41 +51,34 @@ Resources:
       UserData:
         Fn::Base64: |
           #!/bin/bash
+          yum update -y
           curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
           yum install -y nodejs
-          mkdir -p /app
-
-  # ---------------- DATABASE ----------------
-  MyDB:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      AllocatedStorage: 20
-      DBInstanceClass: db.t3.micro
-      Engine: mysql
-      MasterUsername: admin
-      MasterUserPassword: Password123
-      PubliclyAccessible: true
-      BackupRetentionPeriod: 0
-      StorageType: gp2
-
-  # ---------------- SECURITY GROUPS ----------------
 
   WebSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow HTTP
+      GroupDescription: Allow HTTP and SSH
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
 
   AppSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow Node Backend Traffic
+      GroupDescription: Allow Node.js API and SSH
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 3000
           ToPort: 3000
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
           CidrIp: 0.0.0.0/0
