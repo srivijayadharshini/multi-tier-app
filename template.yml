@@ -1,24 +1,64 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Multi Tier Application
+Description: Multi Tier Application (Frontend + Backend CI/CD Ready)
 
 Resources:
 
+  # ---------------- IAM ROLE FOR EC2 ----------------
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref EC2Role
+
+  # ---------------- WEB SERVER ----------------
   WebServer:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t3.micro
       ImageId: ami-01b40e1bcccae197a
+      IamInstanceProfile: !Ref EC2InstanceProfile
       SecurityGroupIds:
         - !Ref WebSecurityGroup
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          yum update -y
+          yum install -y httpd
+          systemctl enable httpd
+          systemctl start httpd
 
+  # ---------------- APP SERVER ----------------
   AppServer:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t3.micro
       ImageId: ami-01b40e1bcccae197a
+      IamInstanceProfile: !Ref EC2InstanceProfile
       SecurityGroupIds:
         - !Ref AppSecurityGroup
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+          yum install -y nodejs
+          mkdir -p /app
 
+  # ---------------- DATABASE ----------------
   MyDB:
     Type: AWS::RDS::DBInstance
     Properties:
@@ -28,6 +68,10 @@ Resources:
       MasterUsername: admin
       MasterUserPassword: Password123
       PubliclyAccessible: true
+      BackupRetentionPeriod: 0
+      StorageType: gp2
+
+  # ---------------- SECURITY GROUPS ----------------
 
   WebSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -42,9 +86,9 @@ Resources:
   AppSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow App Traffic
+      GroupDescription: Allow Node Backend Traffic
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 8080
-          ToPort: 8080
+          FromPort: 3000
+          ToPort: 3000
           CidrIp: 0.0.0.0/0
