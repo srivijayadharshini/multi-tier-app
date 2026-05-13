@@ -1,11 +1,18 @@
 version: 0.2
 
 phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+
   build:
     commands:
-      - echo "Build started"
-      - echo "Packaging template"
+      - echo "Deploying frontend and backend"
+      - chmod +x scripts/deploy-frontend.sh
+      - chmod +x scripts/deploy-backend.sh
+      - ./scripts/deploy-frontend.sh
+      - ./scripts/deploy-backend.sh
 
 artifacts:
   files:
-    - template.yml
+    - '**/*'
